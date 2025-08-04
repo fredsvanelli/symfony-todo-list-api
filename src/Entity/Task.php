@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-class Task
+class Task extends BaseEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -35,10 +35,10 @@ class Task
     )]
     private ?string $description = null;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ['default' => false])]
     #[Assert\NotNull(message: 'isDone field is required')]
     #[Assert\Type(type: 'bool', message: 'isDone must be a boolean')]
-    private ?bool $isDone = null;
+    private ?bool $isDone = false;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $createdAt = null;

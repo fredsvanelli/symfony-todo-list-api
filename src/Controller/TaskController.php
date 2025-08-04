@@ -93,9 +93,7 @@ class TaskController extends AbstractController
         }
 
         $task = new Task();
-        $task->setTitle($data['title'] ?? '');
-        $task->setDescription($data['description'] ?? null);
-        $task->setIsDone($data['isDone'] ?? false);
+        $task->fill($data);
         $task->setOwner($user);
 
         // Validate the task
@@ -124,9 +122,7 @@ class TaskController extends AbstractController
             return ErrorResponse::invalidJson();
         }
 
-        $task->setTitle($data['title'] ?? $task->getTitle());
-        $task->setDescription($data['description'] ?? $task->getDescription());
-        $task->setIsDone($data['isDone'] ?? $task->getIsDone());
+        $task->fill($data);
 
         // Validate the updated task
         $errors = $this->validator->validate($task);
