@@ -16,17 +16,10 @@ params:path {
 
 headers {
   Accept: application/json
-  # The JWT token is automatically included from the environment variable {{jwt_token}}
-  # This variable is set automatically when you run the "Login user" request
-  Authorization: Bearer {{jwt_token}}
 }
 
-tests {
-  test("should return task details", function() {
-    expect(response.status).to.equal(200);
-    expect(response.body).to.have.property("id");
-    expect(response.body).to.have.property("title");
-  });
+auth:bearer {
+  token: {{jwt_token}}
 }
 
 settings {
