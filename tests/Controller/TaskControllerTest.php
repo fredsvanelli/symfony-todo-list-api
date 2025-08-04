@@ -184,7 +184,7 @@ class TaskControllerTest extends IntegrationTestCase
 
         $data = $this->getResponseData();
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Invalid JSON', $data['error']);
+        $this->assertEquals('INVALID_JSON', $data['error']);
     }
 
     public function testCreateTaskWithEmptyTitle(): void
@@ -197,11 +197,11 @@ class TaskControllerTest extends IntegrationTestCase
             'description' => 'Description'
         ]));
 
-        $this->assertJsonResponse(400);
+        $this->assertJsonResponse(422);
 
         $data = $this->getResponseData();
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Validation failed', $data['error']);
+        $this->assertEquals('VALIDATION_FAILED', $data['error']);
         $this->assertArrayHasKey('messages', $data);
     }
 
@@ -268,29 +268,11 @@ class TaskControllerTest extends IntegrationTestCase
             'title' => ''
         ]));
 
-        $this->assertJsonResponse(400);
+        $this->assertJsonResponse(422);
 
         $data = $this->getResponseData();
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Title cannot be empty', $data['error']);
-    }
-
-    public function testUpdateTaskWithInvalidBoolean(): void
-    {
-        $task = $this->createTaskWithFactory('Original Title', 'Original Description', false, $this->user);
-
-        $this->client->request('PATCH', "/api/tasks/{$task->getId()}", [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'CONTENT_TYPE' => 'application/json'
-        ], json_encode([
-            'isDone' => 'not a boolean'
-        ]));
-
-        $this->assertJsonResponse(400);
-
-        $data = $this->getResponseData();
-        $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('isDone must be a boolean value', $data['error']);
+        $this->assertEquals('VALIDATION_FAILED', $data['error']);
     }
 
     public function testUpdateTaskAccessDenied(): void

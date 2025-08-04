@@ -37,6 +37,7 @@ class Task
 
     #[ORM\Column]
     #[Assert\NotNull(message: 'isDone field is required')]
+    #[Assert\Type(type: 'bool', message: 'isDone must be a boolean')]
     private ?bool $isDone = null;
 
     #[ORM\Column(nullable: true)]
@@ -81,6 +82,11 @@ class Task
 
     #[SerializedName('isDone')]
     public function isDone(): ?bool
+    {
+        return $this->isDone;
+    }
+
+    public function getIsDone(): ?bool
     {
         return $this->isDone;
     }

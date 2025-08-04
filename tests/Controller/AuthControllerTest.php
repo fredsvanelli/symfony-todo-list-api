@@ -16,11 +16,9 @@ class AuthControllerTest extends IntegrationTestCase
         $this->assertJsonResponse(201);
 
         $data = $this->getResponseData();
-        $this->assertArrayHasKey('message', $data);
-        $this->assertArrayHasKey('user', $data);
-        $this->assertEquals('User registered successfully', $data['message']);
-        $this->assertEquals('test@example.com', $data['user']['email']);
-        $this->assertArrayHasKey('id', $data['user']);
+        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('email', $data);
+        $this->assertEquals('test@example.com', $data['email']);
     }
 
     public function testUserRegistrationWithInvalidEmail(): void
@@ -30,14 +28,12 @@ class AuthControllerTest extends IntegrationTestCase
             'password' => 'password123',
         ]));
 
-        $this->assertJsonResponse(400);
+        $this->assertJsonResponse(422);
 
         $data = $this->getResponseData();
-        $this->assertArrayHasKey('code', $data);
         $this->assertArrayHasKey('error', $data);
-        $this->assertArrayHasKey('messages', $data);
-        $this->assertEquals(400, $data['code']);
         $this->assertEquals('VALIDATION_FAILED', $data['error']);
+        $this->assertArrayHasKey('messages', $data);
     }
 
     public function testUserRegistrationWithShortPassword(): void
@@ -47,14 +43,12 @@ class AuthControllerTest extends IntegrationTestCase
             'password' => '123',
         ]));
 
-        $this->assertJsonResponse(400);
+        $this->assertJsonResponse(422);
 
         $data = $this->getResponseData();
-        $this->assertArrayHasKey('code', $data);
         $this->assertArrayHasKey('error', $data);
-        $this->assertArrayHasKey('messages', $data);
-        $this->assertEquals(400, $data['code']);
         $this->assertEquals('VALIDATION_FAILED', $data['error']);
+        $this->assertArrayHasKey('messages', $data);
     }
 
     public function testUserRegistrationWithDuplicateEmail(): void
@@ -71,12 +65,10 @@ class AuthControllerTest extends IntegrationTestCase
         $this->assertJsonResponse(400);
 
         $data = $this->getResponseData();
-        $this->assertArrayHasKey('code', $data);
         $this->assertArrayHasKey('error', $data);
-        $this->assertArrayHasKey('messages', $data);
-        $this->assertEquals(400, $data['code']);
-        $this->assertEquals('VALIDATION_FAILED', $data['error']);
-        $this->assertEquals('Email already exists', $data['messages'][0]);
+        $this->assertEquals('EMAIL_ALREADY_EXISTS', $data['error']);
+        $this->assertArrayHasKey('message', $data);
+        $this->assertEquals('Email already exists.', $data['message']);
     }
 
     public function testUserLoginSuccess(): void
@@ -134,17 +126,31 @@ class AuthControllerTest extends IntegrationTestCase
         $this->assertEquals('Bad credentials.', $data['message']);
     }
 
+    public function testUserLoginMissingFields(): void
+    {
+        $this->client->request('POST', '/api/auth/login', [], [], [], json_encode([
+            'email' => 'test@example.com',
+        ]));
+
+        $this->assertJsonResponse(401);
+
+        $data = $this->getResponseData();
+        $this->assertArrayHasKey('error', $data);
+        $this->assertEquals('UNAUTHORIZED', $data['error']);
+        $this->assertArrayHasKey('message', $data);
+        $this->assertEquals("'email' and 'password' are required.", $data['message']);
+    }
+
     public function testUserLoginWithInvalidJson(): void
     {
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], 'invalid json');
+        $this->client->request('POST', '/api/auth/login', [], [], [], 'invalid json');
 
         $this->assertJsonResponse(400);
 
         $data = $this->getResponseData();
+        $this->assertArrayHasKey('error', $data);
         $this->assertArrayHasKey('message', $data);
-        $this->assertEquals('The request body must be a valid JSON object.', $data['message']);
+        $this->assertEquals('INVALID_JSON', $data['error']);
     }
 
     public function testUserRegistrationWithInvalidJson(): void
@@ -154,11 +160,8 @@ class AuthControllerTest extends IntegrationTestCase
         $this->assertJsonResponse(400);
 
         $data = $this->getResponseData();
-        $this->assertArrayHasKey('code', $data);
         $this->assertArrayHasKey('error', $data);
         $this->assertArrayHasKey('message', $data);
-        $this->assertEquals(400, $data['code']);
-        $this->assertEquals('INVALID_JSON_PAYLOAD', $data['error']);
-        $this->assertEquals('The request body must be a valid JSON object.', $data['message']);
+        $this->assertEquals('INVALID_JSON', $data['error']);
     }
 }

@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\Task;
 use App\Entity\User;
 use App\Repository\TaskRepository;
+use App\Response\ErrorResponse;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -71,11 +73,8 @@ class TaskController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Task $task): JsonResponse
     {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        if ($task->getOwner() !== $user) {
-            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        if ($task->getOwner() !== $this->getUser()) {
+            return ErrorResponse::accessDenied();
         }
 
         return $this->json($task);
@@ -87,10 +86,10 @@ class TaskController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        $data = json_decode($request->getContent(), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        try {
+            $data = $request->toArray();
+        } catch (Exception) {
+            return ErrorResponse::invalidJson();
         }
 
         $task = new Task();
@@ -101,15 +100,9 @@ class TaskController extends AbstractController
 
         // Validate the task
         $errors = $this->validator->validate($task);
+
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
-            }
-            return $this->json([
-                'error' => 'Validation failed',
-                'messages' => $errorMessages
-            ], Response::HTTP_BAD_REQUEST);
+            return ErrorResponse::validationError($errors);
         }
 
         $this->entityManager->persist($task);
@@ -121,55 +114,25 @@ class TaskController extends AbstractController
     #[Route('/{id}', name: 'update', methods: ['PATCH'])]
     public function update(Task $task, Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        if ($task->getOwner() !== $user) {
-            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        if ($task->getOwner() !== $this->getUser()) {
+            return ErrorResponse::accessDenied();
         }
 
-        $data = json_decode($request->getContent(), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        try {
+            $data = $request->toArray();
+        } catch (Exception) {
+            return ErrorResponse::invalidJson();
         }
 
-        // Validate input data
-        if (isset($data['title'])) {
-            if (empty(trim($data['title']))) {
-                return $this->json(['error' => 'Title cannot be empty'], Response::HTTP_BAD_REQUEST);
-            }
-            if (strlen($data['title']) > 255) {
-                return $this->json(['error' => 'Title cannot be longer than 255 characters'], Response::HTTP_BAD_REQUEST);
-            }
-            $task->setTitle($data['title']);
-        }
-
-        if (isset($data['description'])) {
-            if (strlen($data['description']) > 1000) {
-                return $this->json(['error' => 'Description cannot be longer than 1000 characters'], Response::HTTP_BAD_REQUEST);
-            }
-            $task->setDescription($data['description']);
-        }
-
-        if (isset($data['isDone'])) {
-            if (!is_bool($data['isDone'])) {
-                return $this->json(['error' => 'isDone must be a boolean value'], Response::HTTP_BAD_REQUEST);
-            }
-            $task->setIsDone($data['isDone']);
-        }
+        $task->setTitle($data['title'] ?? $task->getTitle());
+        $task->setDescription($data['description'] ?? $task->getDescription());
+        $task->setIsDone($data['isDone'] ?? $task->getIsDone());
 
         // Validate the updated task
         $errors = $this->validator->validate($task);
+
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
-            }
-            return $this->json([
-                'error' => 'Validation failed',
-                'messages' => $errorMessages
-            ], Response::HTTP_BAD_REQUEST);
+            return ErrorResponse::validationError($errors);
         }
 
         $this->entityManager->flush();
@@ -180,11 +143,8 @@ class TaskController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     public function delete(Task $task): JsonResponse
     {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        if ($task->getOwner() !== $user) {
-            return $this->json(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        if ($task->getOwner() !== $this->getUser()) {
+            return ErrorResponse::accessDenied();
         }
 
         $this->entityManager->remove($task);

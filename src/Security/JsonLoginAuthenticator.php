@@ -2,6 +2,8 @@
 
 namespace App\Security;
 
+use App\Response\ErrorResponse;
+use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,14 +30,9 @@ class JsonLoginAuthenticator extends AbstractAuthenticator implements Authentica
 
     public function authenticate(Request $request): Passport
     {
-        // Check if the request has invalid JSON
-        if ($request->getContent() && json_last_error() !== JSON_ERROR_NONE) {
-            throw new CustomUserMessageAuthenticationException('Invalid JSON');
-        }
-
-        $data = json_decode($request->getContent(), true);
-
-        if (!$data) {
+        try {
+            $data = $request->toArray();
+        } catch (Exception) {
             throw new CustomUserMessageAuthenticationException('Invalid JSON');
         }
 
@@ -43,7 +40,7 @@ class JsonLoginAuthenticator extends AbstractAuthenticator implements Authentica
         $password = $data['password'] ?? '';
 
         if (empty($email) || empty($password)) {
-            throw new CustomUserMessageAuthenticationException('Email and password are required');
+            throw new CustomUserMessageAuthenticationException("'email' and 'password' are required.");
         }
 
         return new Passport(
@@ -63,26 +60,14 @@ class JsonLoginAuthenticator extends AbstractAuthenticator implements Authentica
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         if ($exception instanceof CustomUserMessageAuthenticationException && $exception->getMessage() === 'Invalid JSON') {
-            return new JsonResponse([
-                'code' => Response::HTTP_BAD_REQUEST,
-                'error' => 'INVALID_JSON_PAYLOAD',
-                'message' => 'The request body must be a valid JSON object.'
-            ], Response::HTTP_BAD_REQUEST);
+            return ErrorResponse::invalidJson();
         }
 
-        return new JsonResponse([
-            'code' => Response::HTTP_UNAUTHORIZED,
-            'error' => 'AUTHENTICATION_FAILED',
-            'message' => $exception->getMessage()
-        ], Response::HTTP_UNAUTHORIZED);
+        return ErrorResponse::unauthorized($exception->getMessage());
     }
 
     public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
-        return new JsonResponse([
-            'code' => Response::HTTP_UNAUTHORIZED,
-            'error' => 'AUTHENTICATION_REQUIRED',
-            'message' => $authException?->getMessage() ?? 'Authentication required.'
-        ], Response::HTTP_UNAUTHORIZED);
+        return ErrorResponse::unauthorized($authException?->getMessage() ?? 'Authentication required.');
     }
 }
