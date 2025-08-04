@@ -17,8 +17,8 @@ Change the database image to use MySQL instead of PostgreSQL in `compose.yaml`:
 +     MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
       # You should definitely change the password in production
 +     MYSQL_RANDOM_ROOT_PASSWORD: "true"
--     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-+     MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
+-     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unsafePassword}
++     MYSQL_PASSWORD: ${MYSQL_PASSWORD:-unsafePassword}
 -     POSTGRES_USER: ${POSTGRES_USER:-app}
 +     MYSQL_USER: ${MYSQL_USER:-app}
     healthcheck:
@@ -38,7 +38,7 @@ Change the database image to use MySQL instead of PostgreSQL in `compose.yaml`:
 
 Depending on the database configuration, modify the environment in the same file at `services.php.environment.DATABASE_URL`
 ```
-DATABASE_URL: mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD:-!ChangeMe!}@database:3306/${MYSQL_DATABASE:-app}?serverVersion=${MYSQL_VERSION:-8}&charset=${MYSQL_CHARSET:-utf8mb4}
+DATABASE_URL: mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD:-unsafePassword}@database:3306/${MYSQL_DATABASE:-app}?serverVersion=${MYSQL_VERSION:-8}&charset=${MYSQL_CHARSET:-utf8mb4}
 ```
 
 Since we changed the port, we also have to define this in the `compose.override.yaml`:
@@ -63,7 +63,7 @@ Last but not least, we need to install the MySQL driver in `Dockerfile`:
 Change the database configuration in `.env`:
 
 ```dotenv 
-DATABASE_URL=mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD:-!ChangeMe!}@database:3306/${MYSQL_DATABASE:-app}?serverVersion=${MYSQL_VERSION:-8}&charset=${MYSQL_CHARSET:-utf8mb4}
+DATABASE_URL=mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD:-unsafePassword}@database:3306/${MYSQL_DATABASE:-app}?serverVersion=${MYSQL_VERSION:-8}&charset=${MYSQL_CHARSET:-utf8mb4}
 ```
 
 ## Final steps

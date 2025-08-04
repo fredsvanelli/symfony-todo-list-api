@@ -64,7 +64,7 @@ JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
 #### 5. Configure Database
 Set `DATABASE_URL` in `.env.local`:
 ```bash
-DATABASE_URL=postgresql://app:!ChangeMe!@database:5432/app?serverVersion=16&charset=utf8
+DATABASE_URL=postgresql://app:unsafePassword@127.0.0.1:5432/app?serverVersion=16&charset=utf8
 ```
 
 Verify database connection:
@@ -81,7 +81,11 @@ docker compose exec php bin/console doctrine:database:create --env=test --if-not
 
 Run Database Migrations:
 ```bash
+# App database
 docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
+
+# Test database
+docker compose exec php bin/console doctrine:migrations:migrate --no-interaction --env=test
 ```
 
 #### 7. Verify Installation
@@ -194,7 +198,7 @@ docker compose exec php bin/console doctrine:database:create --env=test --if-not
 echo "APP_SECRET=$(docker compose exec php php -r 'echo bin2hex(random_bytes(32));')" >> .env.local
 
 # If DATABASE_URL is missing
-echo "DATABASE_URL=postgresql://app:!ChangeMe!@database:5432/app?serverVersion=15&charset=utf8" >> .env.local
+echo "DATABASE_URL=postgresql://app:unsafePassword@127.0.0.1:5432/app?serverVersion=15&charset=utf8" >> .env.local
 
 # Check current environment variables
 docker compose exec php php bin/console debug:container --env-vars
