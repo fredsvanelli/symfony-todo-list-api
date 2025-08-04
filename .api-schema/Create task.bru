@@ -1,0 +1,31 @@
+meta {
+  name: Create task
+  type: http
+  seq: 4
+}
+
+post {
+  url: https://localhost/api/tasks
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "title": "Task 3",
+    "isDone": false
+  }
+}
+
+settings {
+  encodeUrl: true
+}

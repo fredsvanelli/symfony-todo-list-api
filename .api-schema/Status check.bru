@@ -1,0 +1,19 @@
+meta {
+  name: Status check
+  type: http
+  seq: 8
+}
+
+get {
+  url: https://localhost/api/status
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+settings {
+  encodeUrl: true
+}
