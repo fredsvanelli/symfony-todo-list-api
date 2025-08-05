@@ -1,17 +1,17 @@
 meta {
-  name: Lists tasks
+  name: Delete task
   type: http
   seq: 3
 }
 
-get {
-  url: https://localhost/api/tasks?page=1
+delete {
+  url: https://localhost/api/tasks/:id
   body: none
   auth: bearer
 }
 
-params:query {
-  page: 1
+params:path {
+  id: 1
 }
 
 headers {

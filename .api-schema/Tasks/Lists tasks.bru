@@ -1,17 +1,17 @@
 meta {
-  name: Get task
+  name: Lists tasks
   type: http
-  seq: 5
+  seq: 2
 }
 
 get {
-  url: https://localhost/api/tasks/:id
+  url: https://localhost/api/tasks?page=1
   body: none
   auth: bearer
 }
 
-params:path {
-  id: 1
+params:query {
+  page: 1
 }
 
 headers {
